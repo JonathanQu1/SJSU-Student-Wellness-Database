@@ -10,9 +10,9 @@ public class DBUtil {
 
     static {
         try (InputStream input =
-                     DBUtil.class.getClassLoader().getResourceAsStream("db.properties")) {
+                     DBUtil.class.getClassLoader().getResourceAsStream("app.properties")) {
             if (input == null) {
-                throw new RuntimeException("Cannot find db.properties in resources folder.");
+                throw new RuntimeException("Cannot find app.properties in resources folder.");
             }
             props.load(input);
 
@@ -24,9 +24,9 @@ public class DBUtil {
     }
 
     public static Connection getConnection() throws SQLException {
-        String url = props.getProperty("db.url");
-        String user = props.getProperty("db.user");
-        String password = props.getProperty("db.password");
+        String url = props.getProperty("app.url");
+        String user = props.getProperty("app.user");
+        String password = props.getProperty("app.password");
 
         return DriverManager.getConnection(url, user, password);
     }
