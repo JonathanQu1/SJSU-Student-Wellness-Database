@@ -118,18 +118,17 @@ public class Main {
     private static void viewCounselors() {
         String sql =
                 """
-            SELECT c.
-                C
-                                  p.N
-                           p.ContactI
-                           c.Credentials,
-                   c.Specializati
-                           c.Ava
-                         FROM Counselor c
-            JOIN Person p
-                ON p.PersonID = c.
-                PersonID
-            ORDER BY c.CounselorID
+                SELECT
+                    c.CounselorID,
+                    p.Name,
+                    p.ContactInfo,
+                    c.Credentials,
+                    c.Specializations,
+                    c.Availability
+                FROM Counselor c
+                JOIN Person p
+                    ON p.PersonID = c.PersonID
+                ORDER BY c.CounselorID;
             """;
 
         try (Connection conn = DBUtil.getConnection();
