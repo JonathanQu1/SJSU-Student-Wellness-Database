@@ -6,7 +6,7 @@ public class Main {
     private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
-        System.out.println("=== SJSU Student Wellness Console App ===");
+        System.out.println("=== SJSU Student Wellness Database ===");
 
         while (true) {
             printMenu();
@@ -18,6 +18,7 @@ public class Main {
                 case 3 -> viewAppointments();
                 case 4 -> updateAppointmentStatus();
                 case 5 -> transactionalSelfAssessmentAndReferral();
+                case 6 -> deleteStudent();
                 case 0 -> {
                     System.out.println("Goodbye!");
                     return;
@@ -36,6 +37,7 @@ public class Main {
         System.out.println("3. View all appointments");
         System.out.println("4. Update appointment status");
         System.out.println("5. Run transaction: add SelfAssessment + Referral");
+        System.out.println("6. Delete student from the database");
         System.out.println("0. Exit");
     }
 
@@ -79,7 +81,8 @@ public class Main {
 
     private static void viewStudents() {
         String sql = """
-            SELECT s.StudentID,
+            
+                SELECT s.StudentID,
                    p.Name,
                    p.ContactInfo,
                    s.Major,
@@ -113,15 +116,19 @@ public class Main {
     // ---------------- OPTION 2: VIEW COUNSELORS ----------------
 
     private static void viewCounselors() {
-        String sql = """
-            SELECT c.CounselorID,
-                   p.Name,
-                   p.ContactInfo,
-                   c.Credentials,
-                   c.Specializations,
-                   c.Availability
-            FROM Counselor c
-            JOIN Person p ON p.PersonID = c.PersonID
+        String sql =
+                """
+            SELECT c.
+                C
+                                  p.N
+                           p.ContactI
+                           c.Credentials,
+                   c.Specializati
+                           c.Ava
+                         FROM Counselor c
+            JOIN Person p
+                ON p.PersonID = c.
+                PersonID
             ORDER BY c.CounselorID
             """;
 
@@ -149,22 +156,27 @@ public class Main {
 
     // ---------------- OPTION 3: VIEW APPOINTMENTS ----------------
 
-    private static void viewAppointments() {
-        String sql = """
-            SELECT a.AppointmentID,
-                   a.DateTime,
-                   a.Status,
-                   a.Mode,
-                   s.StudentID,
-                   sp.Name      AS StudentName,
-                   c.CounselorID,
-                   cp.Name      AS CounselorName
-            FROM Appointment a
-            JOIN Student   s  ON s.StudentID = a.StudentID
-            JOIN Person    sp ON sp.PersonID = s.PersonID
-            JOIN Counselor c  ON c.CounselorID = a.CounselorID
-            JOIN Person    cp ON cp.PersonID = c.PersonID
-            ORDER BY a.AppointmentID
+    private static
+                void viewAppointments()
+                {
+        String
+                sql =
+                """
+                SELECT
+                    a.AppointmentID,
+                    a.DateTime,
+                    a.Status,
+                    a.Mode,
+                    s.StudentID,
+                    sp.Name AS StudentName,
+                    c.CounselorID,
+                    cp.Name AS CounselorName
+                FROM Appointment a
+                JOIN Student   s  ON s.StudentID  = a.StudentID
+                JOIN Person    sp ON sp.PersonID  = s.PersonID
+                JOIN Counselor c  ON c.CounselorID = a.CounselorID
+                JOIN Person    cp ON cp.PersonID  = c.PersonID
+                ORDER BY a.AppointmentID;
             """;
 
         try (Connection conn = DBUtil.getConnection();
@@ -183,7 +195,7 @@ public class Main {
                 int counselorId = rs.getInt("CounselorID");
                 String counselorName = rs.getString("CounselorName");
 
-                System.out.printf("%6d | %-19s | %-9s | %-10s | %9d | %-15s | %11d | %s%n",
+                System.out.printf("%4d | %-19s | %-9s | %-10s | %9d | %-15s | %11d | %s%n",
                         apptId, dt, status, mode, studentId, studentName, counselorId, counselorName);
             }
         } catch (SQLException e) {
@@ -237,14 +249,17 @@ public class Main {
 
         int anxiety = readIntInRange("Anxiety score (0-10): ", 0, 10);
         int depression = readIntInRange("Depression score (0-10): ", 0, 10);
-        int stress = readIntInRange("Stress score (0-10): ", 0, 10);
+        int stress = readIntInRange("Stress score (0-10): ", 0, 10)
+                ;
 
         // For ReferralDate we can reuse the same date string
-        String referralStatus = "Pending";
+        String
+                referralStatus = "Pending";
 
         String insertAssessmentSql = """
             INSERT INTO SelfAssessment (StudentID, Date, AnxietyScore, DepressionScore, StressScore)
-            VALUES (?, ?, ?, ?, ?)
+                            VALUES (
+                ?, ?, ?, ?, ?)
             """;
 
         String insertReferralSql = """
@@ -309,4 +324,29 @@ public class Main {
             System.out.println("Database error during transaction: " + e.getMessage());
         }
     }
+    // ---------------- OPTION 6: Delete Student from Database ----------------
+    private static void deleteStudent() {
+        System.out.println("\n=== Delete Student ===");
+        int studentId = readInt("Enter StudentID to delete: ");
+
+        String sql = "DELETE FROM Student WHERE StudentID = ?";
+
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, studentId);
+
+            int rows = ps.executeUpdate();
+            if (rows == 0) {
+                System.out.println("No student found with that ID. Nothing deleted.");
+            } else {
+                System.out.println("Student deleted successfully.");
+                System.out.println("(Any related records were removed automatically via ON DELETE CASCADE.)");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("Error deleting student: " + e.getMessage());
+        }
+    }
 }
+

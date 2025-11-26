@@ -19,7 +19,7 @@ Major      VARCHAR(100),
 Year     VARCHAR(20),
 CONSTRAINT fk_student_person
     FOREIGN KEY (PersonID) REFERENCES Person(PersonID)
-ON UPDATE CASCADE ON DELETE RESTRICT
+ON UPDATE CASCADE ON DELETE CASCADE
 );
 CREATE TABLE Counselor (
 CounselorID    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -29,7 +29,7 @@ Specializations TEXT,
 Availability    TEXT,
 CONSTRAINT fk_counselor_person
     FOREIGN KEY (PersonID) REFERENCES Person(PersonID)
-        ON UPDATE CASCADE ON DELETE RESTRICT
+        ON UPDATE CASCADE ON DELETE CASCADE
 );
 CREATE TABLE SelfAssessment (
 AssessmentID    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -44,7 +44,7 @@ CONSTRAINT chk_scores
         AND StressScore BETWEEN 0 AND 10),
     CONSTRAINT fk_assessment_student
         FOREIGN KEY (StudentID) REFERENCES Student(StudentID)
-            ON UPDATE CASCADE ON DELETE RESTRICT
+            ON UPDATE CASCADE ON DELETE CASCADE
 );
 CREATE TABLE Referral (
 ReferralID   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -54,10 +54,10 @@ ReferralDate DATE NOT NULL,
 Status       ENUM('Pending','Accepted','Declined','Closed') NOT NULL,
 CONSTRAINT fk_referral_assessment
     FOREIGN KEY (AssessmentID) REFERENCES SelfAssessment(AssessmentID)
-        ON UPDATE CASCADE ON DELETE RESTRICT,
+        ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_referral_counselor
     FOREIGN KEY (CounselorID) REFERENCES Counselor(CounselorID)
-        ON UPDATE CASCADE ON DELETE RESTRICT
+        ON UPDATE CASCADE ON DELETE CASCADE
 );
 CREATE TABLE Appointment (
 AppointmentID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -70,10 +70,10 @@ UNIQUE KEY uq_appt_student (StudentID, AppointmentID),
 UNIQUE KEY uq_appt_counselor (CounselorID, AppointmentID),
 CONSTRAINT fk_appt_student
     FOREIGN KEY (StudentID) REFERENCES Student(StudentID)
-        ON UPDATE CASCADE ON DELETE RESTRICT,
+        ON UPDATE CASCADE ON DELETE CASCADE,
     CONSTRAINT fk_appt_counselor
     FOREIGN KEY (CounselorID) REFERENCES Counselor(CounselorID)
-        ON UPDATE CASCADE ON DELETE RESTRICT
+        ON UPDATE CASCADE ON DELETE CASCADE
 );
 CREATE TABLE Feedback (
 AppointmentID INT UNSIGNED NOT NULL,
@@ -158,12 +158,11 @@ INSERT INTO Appointment (StudentID, CounselorID, `DateTime`, Status, `Mode`) VAL
 (7, 3, '2025-11-11 15:30:00', 'Scheduled','in-person'),
 (8, 4, '2025-11-12 10:45:00', 'Scheduled','virtual');
 INSERT INTO Feedback (AppointmentID, FeedbackSeq, StudentID, CounselorID, SubmittedAt, Rating, Comments) VALUES
-(17, 1, 1, 1, '2025-11-05 11:05:00', 5, 'Very helpful.'),
-(17, 2, 1, 1, '2025-11-05 20:15:00', 4, 'Follow-up thoughts.'),
-(18, 1, 2, 2, '2025-11-06 17:00:00', 5, 'Felt understood.'),
-(19, 1, 3, 3, '2025-11-07 10:30:00', 4, 'Clear plan.'),
-(22, 1, 6, 2, '2025-11-10 17:10:00', 5, 'Great session.'),
-(23, 1, 7, 3, '2025-11-11 16:00:00', 4, 'Good strategies.'),
-(23, 2, 7, 3, '2025-11-12 09:00:00', 5, 'Extra feedback after trying tips.'),
-(24, 1, 8, 4, '2025-11-12 12:00:00', 4, 'Helpful.');
-
+(1, 1, 1, 1, '2025-11-05 11:05:00', 5, 'Very helpful.'),
+(1, 2, 1, 1, '2025-11-05 20:15:00', 4, 'Follow-up thoughts.'),
+(2, 1, 2, 2, '2025-11-06 17:00:00', 5, 'Felt understood.'),
+(3, 1, 3, 3, '2025-11-07 10:30:00', 4, 'Clear plan.'),
+(6, 1, 6, 2, '2025-11-10 17:10:00', 5, 'Great session.'),
+(7, 1, 7, 3, '2025-11-11 16:00:00', 4, 'Good strategies.'),
+(7, 2, 7, 3, '2025-11-12 09:00:00', 5, 'Extra feedback after trying tips.'),
+(8, 1, 8, 4, '2025-11-12 12:00:00', 4, 'Helpful.');
