@@ -1,3 +1,4 @@
+//-----------Drop Tables if they exist---------------
 DROP TABLE IF EXISTS Feedback;
 DROP TABLE IF EXISTS Appointment;
 DROP TABLE IF EXISTS Referral;
@@ -5,8 +6,10 @@ DROP TABLE IF EXISTS SelfAssessment;
 DROP TABLE IF EXISTS Counselor;
 DROP TABLE IF EXISTS Student;
 DROP TABLE IF EXISTS Person;
+DROP VIEW IF EXISTS vw_student_referral_summary;
+DROP PROCEDURE IF EXISTS sp_add_selfassessment_once_per_day;
 
-
+//-----------Create tables---------------
 CREATE TABLE Person (
 PersonID     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 Name         VARCHAR(100) NOT NULL,
@@ -59,6 +62,7 @@ CONSTRAINT fk_referral_assessment
     FOREIGN KEY (CounselorID) REFERENCES Counselor(CounselorID)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
+
 CREATE TABLE Appointment (
 AppointmentID INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 StudentID     INT UNSIGNED NOT NULL,
@@ -75,6 +79,7 @@ CONSTRAINT fk_appt_student
     FOREIGN KEY (CounselorID) REFERENCES Counselor(CounselorID)
         ON UPDATE CASCADE ON DELETE CASCADE
 );
+
 CREATE TABLE Feedback (
 AppointmentID INT UNSIGNED NOT NULL,
 FeedbackSeq   INT UNSIGNED NOT NULL,
@@ -97,6 +102,55 @@ CONSTRAINT fk_feedback_appt
         REFERENCES Appointment (CounselorID, AppointmentID)
             ON UPDATE CASCADE
 );
+
+//-----------Stored Routine---------------
+DELIMITER //
+
+DROP PROCEDURE IF EXISTS sp_add_selfassessment_once_per_day //
+CREATE PROCEDURE sp_add_selfassessment_once_per_day (
+    IN pStudentID     INT UNSIGNED,
+    IN pDate          DATE,
+    IN pAnxiety       INT,
+    IN pDepression    INT,
+    IN pStress        INT
+)
+BEGIN
+    -- Rule: at most ONE self-assessment per student per day
+    IF EXISTS (
+        SELECT 1
+        FROM SelfAssessment
+        WHERE StudentID = pStudentID
+          AND Date      = pDate
+    ) THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Student already has a self-assessment for this date. No row inserted.';
+ELSE
+        INSERT INTO SelfAssessment (StudentID, Date, AnxietyScore, DepressionScore, StressScore)
+        VALUES (pStudentID, pDate, pAnxiety, pDepression, pStress);
+END IF;
+END //
+
+DELIMITER ;
+
+
+//-----------Creates a view---------------
+CREATE OR REPLACE VIEW vw_appointment_overview AS
+SELECT
+    a.AppointmentID,
+    a.DateTime,
+    a.Status,
+    a.Mode,
+    s.StudentID,
+    sp.Name AS StudentName,
+    c.CounselorID,
+    cp.Name AS CounselorName
+FROM Appointment a
+         JOIN Student   s  ON s.StudentID  = a.StudentID
+         JOIN Person    sp ON sp.PersonID  = s.PersonID
+         JOIN Counselor c  ON c.CounselorID = a.CounselorID
+         JOIN Person    cp ON cp.PersonID  = c.PersonID;
+
+//-----------Inserts---------------
 INSERT INTO Person (Name, ContactInfo) VALUES
 ('Avery Nguyen',   'avery.nguyen@sjsu.edu'),
 ('Jordan Patel',   'jordan.patel@sjsu.edu'),
@@ -126,6 +180,7 @@ INSERT INTO Counselor (PersonID, Credentials, Specializations, Availability) VAL
 (10, 'LMFT', 'CBT; Couples',                 'Tue-Fri 10:00-18:00'),
 (11, 'PhD',  'Trauma; PTSD',                 'Mon-Thu 08:00-16:00'),
 (12, 'PsyD', 'Adolescent; Stress Management','Wed-Sat 11:00-19:00');
+
 INSERT INTO SelfAssessment (StudentID, `Date`, AnxietyScore, DepressionScore, StressScore) VALUES
 (1, '2025-11-01', 5, 4, 6),
 (1, '2025-11-15', 4, 4, 6),   -- same student, multiple self-assessments
@@ -137,7 +192,6 @@ INSERT INTO SelfAssessment (StudentID, `Date`, AnxietyScore, DepressionScore, St
 (7, '2025-11-07', 8, 6, 8),
 (8, '2025-11-08', 4, 4, 4);
 
-
 INSERT INTO Referral (AssessmentID, CounselorID, ReferralDate, Status) VALUES
 (1, 1, '2025-11-01', 'Pending'),
 (2, 1, '2025-11-15', 'Accepted'),
@@ -148,6 +202,7 @@ INSERT INTO Referral (AssessmentID, CounselorID, ReferralDate, Status) VALUES
 (7, 1, '2025-11-06', 'Pending'),
 (8, 2, '2025-11-07', 'Pending'),
 (9, 4, '2025-11-08', 'Accepted');
+
 INSERT INTO Appointment (StudentID, CounselorID, `DateTime`, Status, `Mode`) VALUES
 (1, 1, '2025-11-05 10:00:00', 'Scheduled', 'virtual'),
 (2, 2, '2025-11-06 14:30:00', 'Completed', 'in-person'),
@@ -157,6 +212,7 @@ INSERT INTO Appointment (StudentID, CounselorID, `DateTime`, Status, `Mode`) VAL
 (6, 2, '2025-11-10 16:00:00', 'Completed','virtual'),
 (7, 3, '2025-11-11 15:30:00', 'Scheduled','in-person'),
 (8, 4, '2025-11-12 10:45:00', 'Scheduled','virtual');
+
 INSERT INTO Feedback (AppointmentID, FeedbackSeq, StudentID, CounselorID, SubmittedAt, Rating, Comments) VALUES
 (1, 1, 1, 1, '2025-11-05 11:05:00', 5, 'Very helpful.'),
 (1, 2, 1, 1, '2025-11-05 20:15:00', 4, 'Follow-up thoughts.'),
