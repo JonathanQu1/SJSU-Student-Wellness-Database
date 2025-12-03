@@ -1,4 +1,4 @@
-//-----------Drop Tables if they exist---------------
+/*-----------Drop Tables if they exist---------------*/
 DROP TABLE IF EXISTS Feedback;
 DROP TABLE IF EXISTS Appointment;
 DROP TABLE IF EXISTS Referral;
@@ -9,7 +9,7 @@ DROP TABLE IF EXISTS Person;
 DROP VIEW IF EXISTS vw_student_referral_summary;
 DROP PROCEDURE IF EXISTS sp_add_selfassessment_once_per_day;
 
-//-----------Create tables---------------
+/*-----------Create tables---------------*/
 CREATE TABLE Person (
 PersonID     INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
 Name         VARCHAR(100) NOT NULL,
@@ -103,7 +103,7 @@ CONSTRAINT fk_feedback_appt
             ON UPDATE CASCADE
 );
 
-//-----------Stored Routine---------------
+/*-----------Stored Routine---------------*/
 DELIMITER //
 
 DROP PROCEDURE IF EXISTS sp_add_selfassessment_once_per_day //
@@ -133,7 +133,7 @@ END //
 DELIMITER ;
 
 
-//-----------Creates a view---------------
+/*-----------Creates a view---------------*/
 CREATE OR REPLACE VIEW vw_appointment_overview AS
 SELECT
     a.AppointmentID,
@@ -150,7 +150,7 @@ FROM Appointment a
          JOIN Counselor c  ON c.CounselorID = a.CounselorID
          JOIN Person    cp ON cp.PersonID  = c.PersonID;
 
-//-----------Inserts---------------
+/*-----------Inserts---------------*/
 INSERT INTO Person (Name, ContactInfo) VALUES
 ('Avery Nguyen',   'avery.nguyen@sjsu.edu'),
 ('Jordan Patel',   'jordan.patel@sjsu.edu'),
