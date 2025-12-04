@@ -328,6 +328,15 @@ public class Main {
         System.out.println("\n=== Delete Student ===");
         int studentId = readInt("Enter StudentID to delete: ");
 
+        // Confirm before deleting
+        String confirm = readNonEmpty(
+                "Are you sure you want to delete student with ID " + studentId + "? (y/n): "
+        );
+        if (!confirm.equalsIgnoreCase("y")) {
+            System.out.println("Delete cancelled. No changes were made.");
+            return; // stop here, do not delete
+        }
+
         String sql = "DELETE FROM Student WHERE StudentID = ?";
 
         try (Connection conn = DBUtil.getConnection();
